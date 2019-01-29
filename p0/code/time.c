@@ -8,16 +8,18 @@
 #define TIMER_LOW  0x4000001C
 #define TIMER_HIGH 0x40000020 
 
-unsigned long long int now_usec ()
+unsigned long long now_usec ()
 {
-	return (((unsigned long long int) GET32(TIMER_HIGH)) << 32) + ((unsigned long long int) GET32(TIMER_LOW));
+	unsigned long long low  = GET32(TIMER_LOW);
+	unsigned long long high = GET32(TIMER_HIGH);
+	return (high << 32) + low;
 }
 
-unsigned long long int usec_diff ( unsigned long long int now, unsigned long long int before )
+unsigned long long usec_diff ( unsigned long long now, unsigned long long before )
 {
 	if (now < before)
 	{
-		return (0xFFFFFFFFFFFFFFFFLL - before) + now;
+		return (0xFFFFFFFFFFFFFFFFull - before) + now + 1;
 	}
 
 	return now - before;
@@ -26,19 +28,14 @@ unsigned long long int usec_diff ( unsigned long long int now, unsigned long lon
 void wait( unsigned int usecs )
 {
 	
-	long long int time_left = usecs;
-	
-	unsigned long long int before = now_usec();
-	while(1)
+	long long time_left = usecs;
+	unsigned long long before = now_usec();
+	unsigned long long now = before;
+
+	while((time_left = time_left - usec_diff(now, before)) > 0)
 	{
-		unsigned long long int now = now_usec();
-		time_left -= usec_diff(now, before);
-
-		if (time_left <= 0) {
-			break;
-		}
-
 		before = now;
+		now = now_usec();
 	}
 
 	return;
@@ -50,7 +47,7 @@ void init_timer()
 	// Bit 9 -> 0 : 64-bit Core timer increments by 1
 	PUT32(TIMER_CONTROL, 0);
 
-	// Sets timer to 1MHz
+	// Sets timer to 1MHz (Divider is 19.2)
 	PUT32(TIMER_PRESCALE, 0x06AAAAAB);
 
 	// Reset timer to 0
