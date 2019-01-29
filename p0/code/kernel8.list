@@ -1,0 +1,293 @@
+
+kernel8.elf:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+0000000000080000 <_start>:
+   80000:	14002000 	b	88000 <skip>
+	...
+
+0000000000088000 <skip>:
+   88000:	d53800a0 	mrs	x0, mpidr_el1
+   88004:	d2bfe001 	mov	x1, #0xff000000            	// #4278190080
+   88008:	8a210000 	bic	x0, x0, x1
+   8800c:	b4000160 	cbz	x0, 88038 <core_zero>
+   88010:	d1000401 	sub	x1, x0, #0x1
+   88014:	b4000181 	cbz	x1, 88044 <core_one>
+   88018:	d1000801 	sub	x1, x0, #0x2
+   8801c:	b4000241 	cbz	x1, 88064 <core_two>
+   88020:	d1000c01 	sub	x1, x0, #0x3
+   88024:	b4000301 	cbz	x1, 88084 <core_three>
+   88028:	d53800a0 	mrs	x0, mpidr_el1
+   8802c:	d2a00081 	mov	x1, #0x40000               	// #262144
+   88030:	b9000020 	str	w0, [x1]
+   88034:	14000003 	b	88040 <hang>
+
+0000000000088038 <core_zero>:
+   88038:	b27103ff 	mov	sp, #0x8000                	// #32768
+   8803c:	94000025 	bl	880d0 <notmain>
+
+0000000000088040 <hang>:
+   88040:	14000000 	b	88040 <hang>
+
+0000000000088044 <core_one>:
+   88044:	b27307ff 	mov	sp, #0x6000                	// #24576
+   88048:	d2800001 	mov	x1, #0x0                   	// #0
+   8804c:	b90003e1 	str	w1, [sp]
+   88050:	d2800000 	mov	x0, #0x0                   	// #0
+
+0000000000088054 <core_one_loop>:
+   88054:	b94003e0 	ldr	w0, [sp]
+   88058:	34ffffe0 	cbz	w0, 88054 <core_one_loop>
+   8805c:	94000012 	bl	880a4 <hopper>
+   88060:	17fffff8 	b	88040 <hang>
+
+0000000000088064 <core_two>:
+   88064:	b27203ff 	mov	sp, #0x4000                	// #16384
+   88068:	d2800001 	mov	x1, #0x0                   	// #0
+   8806c:	b90003e1 	str	w1, [sp]
+   88070:	d2800000 	mov	x0, #0x0                   	// #0
+
+0000000000088074 <core_two_loop>:
+   88074:	b94003e0 	ldr	w0, [sp]
+   88078:	34ffffe0 	cbz	w0, 88074 <core_two_loop>
+   8807c:	9400000a 	bl	880a4 <hopper>
+   88080:	17fffff0 	b	88040 <hang>
+
+0000000000088084 <core_three>:
+   88084:	b27303ff 	mov	sp, #0x2000                	// #8192
+   88088:	d2800001 	mov	x1, #0x0                   	// #0
+   8808c:	b90003e1 	str	w1, [sp]
+   88090:	d2800000 	mov	x0, #0x0                   	// #0
+
+0000000000088094 <core_three_loop>:
+   88094:	b94003e0 	ldr	w0, [sp]
+   88098:	34ffffe0 	cbz	w0, 88094 <core_three_loop>
+   8809c:	94000002 	bl	880a4 <hopper>
+   880a0:	17ffffe8 	b	88040 <hang>
+
+00000000000880a4 <hopper>:
+   880a4:	d61f0000 	br	x0
+
+00000000000880a8 <PUT32>:
+   880a8:	b9000001 	str	w1, [x0]
+   880ac:	d65f03c0 	ret
+
+00000000000880b0 <GET32>:
+   880b0:	b9400000 	ldr	w0, [x0]
+   880b4:	d65f03c0 	ret
+
+00000000000880b8 <GETPC>:
+   880b8:	aa1e03e0 	mov	x0, x30
+   880bc:	d65f03c0 	ret
+
+00000000000880c0 <dummy>:
+   880c0:	d65f03c0 	ret
+
+00000000000880c4 <idle>:
+   880c4:	d503207f 	wfi
+   880c8:	d65f03c0 	ret
+   880cc:	00000000 	.inst	0x00000000 ; undefined
+
+00000000000880d0 <notmain>:
+   880d0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+   880d4:	910003fd 	mov	x29, sp
+   880d8:	94000088 	bl	882f8 <init_timer>
+   880dc:	52800140 	mov	w0, #0xa                   	// #10
+   880e0:	94000032 	bl	881a8 <blink_led>
+   880e4:	d503201f 	nop
+   880e8:	94000008 	bl	88108 <led_on>
+   880ec:	52a00200 	mov	w0, #0x100000              	// #1048576
+   880f0:	9400006e 	bl	882a8 <wait>
+   880f4:	9400001b 	bl	88160 <led_off>
+   880f8:	52a00200 	mov	w0, #0x100000              	// #1048576
+   880fc:	9400006b 	bl	882a8 <wait>
+   88100:	17fffffa 	b	880e8 <notmain+0x18>
+   88104:	00000000 	.inst	0x00000000 ; undefined
+
+0000000000088108 <led_on>:
+   88108:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+   8810c:	910003fd 	mov	x29, sp
+   88110:	f9000bf3 	str	x19, [sp, #16]
+   88114:	52800113 	mov	w19, #0x8                   	// #8
+   88118:	72a7e413 	movk	w19, #0x3f20, lsl #16
+   8811c:	2a1303e0 	mov	w0, w19
+   88120:	97ffffe4 	bl	880b0 <GET32>
+   88124:	12027000 	and	w0, w0, #0xc7ffffff
+   88128:	32050001 	orr	w1, w0, #0x8000000
+   8812c:	2a1303e0 	mov	w0, w19
+   88130:	97ffffde 	bl	880a8 <PUT32>
+   88134:	52800500 	mov	w0, #0x28                  	// #40
+   88138:	52a40001 	mov	w1, #0x20000000            	// #536870912
+   8813c:	72a7e400 	movk	w0, #0x3f20, lsl #16
+   88140:	97ffffda 	bl	880a8 <PUT32>
+   88144:	f9400bf3 	ldr	x19, [sp, #16]
+   88148:	52800380 	mov	w0, #0x1c                  	// #28
+   8814c:	a8c27bfd 	ldp	x29, x30, [sp], #32
+   88150:	52a40001 	mov	w1, #0x20000000            	// #536870912
+   88154:	72a7e400 	movk	w0, #0x3f20, lsl #16
+   88158:	17ffffd4 	b	880a8 <PUT32>
+   8815c:	d503201f 	nop
+
+0000000000088160 <led_off>:
+   88160:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+   88164:	910003fd 	mov	x29, sp
+   88168:	f9000bf3 	str	x19, [sp, #16]
+   8816c:	52800113 	mov	w19, #0x8                   	// #8
+   88170:	72a7e413 	movk	w19, #0x3f20, lsl #16
+   88174:	2a1303e0 	mov	w0, w19
+   88178:	97ffffce 	bl	880b0 <GET32>
+   8817c:	12027000 	and	w0, w0, #0xc7ffffff
+   88180:	32050001 	orr	w1, w0, #0x8000000
+   88184:	2a1303e0 	mov	w0, w19
+   88188:	97ffffc8 	bl	880a8 <PUT32>
+   8818c:	f9400bf3 	ldr	x19, [sp, #16]
+   88190:	52800500 	mov	w0, #0x28                  	// #40
+   88194:	a8c27bfd 	ldp	x29, x30, [sp], #32
+   88198:	52a40001 	mov	w1, #0x20000000            	// #536870912
+   8819c:	72a7e400 	movk	w0, #0x3f20, lsl #16
+   881a0:	17ffffc2 	b	880a8 <PUT32>
+   881a4:	d503201f 	nop
+
+00000000000881a8 <blink_led>:
+   881a8:	a9bd7bfd 	stp	x29, x30, [sp, #-48]!
+   881ac:	910003fd 	mov	x29, sp
+   881b0:	a90153f3 	stp	x19, x20, [sp, #16]
+   881b4:	2a0003f4 	mov	w20, w0
+   881b8:	52800100 	mov	w0, #0x8                   	// #8
+   881bc:	72a7e400 	movk	w0, #0x3f20, lsl #16
+   881c0:	97ffffbc 	bl	880b0 <GET32>
+   881c4:	12027001 	and	w1, w0, #0xc7ffffff
+   881c8:	52800100 	mov	w0, #0x8                   	// #8
+   881cc:	32050021 	orr	w1, w1, #0x8000000
+   881d0:	72a7e400 	movk	w0, #0x3f20, lsl #16
+   881d4:	97ffffb5 	bl	880a8 <PUT32>
+   881d8:	52800500 	mov	w0, #0x28                  	// #40
+   881dc:	52a40001 	mov	w1, #0x20000000            	// #536870912
+   881e0:	72a7e400 	movk	w0, #0x3f20, lsl #16
+   881e4:	97ffffb1 	bl	880a8 <PUT32>
+   881e8:	340002d4 	cbz	w20, 88240 <blink_led+0x98>
+   881ec:	51000693 	sub	w19, w20, #0x1
+   881f0:	52800514 	mov	w20, #0x28                  	// #40
+   881f4:	f90013f5 	str	x21, [sp, #32]
+   881f8:	52800395 	mov	w21, #0x1c                  	// #28
+   881fc:	72a7e414 	movk	w20, #0x3f20, lsl #16
+   88200:	72a7e415 	movk	w21, #0x3f20, lsl #16
+   88204:	d503201f 	nop
+   88208:	52a40001 	mov	w1, #0x20000000            	// #536870912
+   8820c:	2a1503e0 	mov	w0, w21
+   88210:	97ffffa6 	bl	880a8 <PUT32>
+   88214:	51000673 	sub	w19, w19, #0x1
+   88218:	52990000 	mov	w0, #0xc800                	// #51200
+   8821c:	94000023 	bl	882a8 <wait>
+   88220:	52a40001 	mov	w1, #0x20000000            	// #536870912
+   88224:	2a1403e0 	mov	w0, w20
+   88228:	97ffffa0 	bl	880a8 <PUT32>
+   8822c:	52990000 	mov	w0, #0xc800                	// #51200
+   88230:	9400001e 	bl	882a8 <wait>
+   88234:	3100067f 	cmn	w19, #0x1
+   88238:	54fffe81 	b.ne	88208 <blink_led+0x60>  // b.any
+   8823c:	f94013f5 	ldr	x21, [sp, #32]
+   88240:	52800500 	mov	w0, #0x28                  	// #40
+   88244:	a94153f3 	ldp	x19, x20, [sp, #16]
+   88248:	52a40001 	mov	w1, #0x20000000            	// #536870912
+   8824c:	a8c37bfd 	ldp	x29, x30, [sp], #48
+   88250:	72a7e400 	movk	w0, #0x3f20, lsl #16
+   88254:	17ffff95 	b	880a8 <PUT32>
+
+0000000000088258 <now_usec>:
+   88258:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+   8825c:	52800400 	mov	w0, #0x20                  	// #32
+   88260:	72a80000 	movk	w0, #0x4000, lsl #16
+   88264:	910003fd 	mov	x29, sp
+   88268:	f9000bf3 	str	x19, [sp, #16]
+   8826c:	97ffff91 	bl	880b0 <GET32>
+   88270:	2a0003f3 	mov	w19, w0
+   88274:	52800380 	mov	w0, #0x1c                  	// #28
+   88278:	72a80000 	movk	w0, #0x4000, lsl #16
+   8827c:	97ffff8d 	bl	880b0 <GET32>
+   88280:	2a0003e0 	mov	w0, w0
+   88284:	8b138000 	add	x0, x0, x19, lsl #32
+   88288:	f9400bf3 	ldr	x19, [sp, #16]
+   8828c:	a8c27bfd 	ldp	x29, x30, [sp], #32
+   88290:	d65f03c0 	ret
+   88294:	d503201f 	nop
+
+0000000000088298 <usec_diff>:
+   88298:	eb01001f 	cmp	x0, x1
+   8829c:	da010000 	sbc	x0, x0, x1
+   882a0:	d65f03c0 	ret
+   882a4:	d503201f 	nop
+
+00000000000882a8 <wait>:
+   882a8:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+   882ac:	910003fd 	mov	x29, sp
+   882b0:	a90153f3 	stp	x19, x20, [sp, #16]
+   882b4:	2a0003f4 	mov	w20, w0
+   882b8:	97ffffe8 	bl	88258 <now_usec>
+   882bc:	aa0003f3 	mov	x19, x0
+   882c0:	97ffffe6 	bl	88258 <now_usec>
+   882c4:	d1000401 	sub	x1, x0, #0x1
+   882c8:	eb00027f 	cmp	x19, x0
+   882cc:	cb130021 	sub	x1, x1, x19
+   882d0:	cb130013 	sub	x19, x0, x19
+   882d4:	9a819261 	csel	x1, x19, x1, ls  // ls = plast
+   882d8:	aa0003f3 	mov	x19, x0
+   882dc:	cb010294 	sub	x20, x20, x1
+   882e0:	f100029f 	cmp	x20, #0x0
+   882e4:	54fffeec 	b.gt	882c0 <wait+0x18>
+   882e8:	a94153f3 	ldp	x19, x20, [sp, #16]
+   882ec:	a8c27bfd 	ldp	x29, x30, [sp], #32
+   882f0:	d65f03c0 	ret
+   882f4:	d503201f 	nop
+
+00000000000882f8 <init_timer>:
+   882f8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+   882fc:	52800001 	mov	w1, #0x0                   	// #0
+   88300:	52a80000 	mov	w0, #0x40000000            	// #1073741824
+   88304:	910003fd 	mov	x29, sp
+   88308:	97ffff68 	bl	880a8 <PUT32>
+   8830c:	52955561 	mov	w1, #0xaaab                	// #43691
+   88310:	52800100 	mov	w0, #0x8                   	// #8
+   88314:	72a0d541 	movk	w1, #0x6aa, lsl #16
+   88318:	72a80000 	movk	w0, #0x4000, lsl #16
+   8831c:	97ffff63 	bl	880a8 <PUT32>
+   88320:	52800380 	mov	w0, #0x1c                  	// #28
+   88324:	52800001 	mov	w1, #0x0                   	// #0
+   88328:	72a80000 	movk	w0, #0x4000, lsl #16
+   8832c:	97ffff5f 	bl	880a8 <PUT32>
+   88330:	a8c17bfd 	ldp	x29, x30, [sp], #16
+   88334:	52800400 	mov	w0, #0x20                  	// #32
+   88338:	52800001 	mov	w1, #0x0                   	// #0
+   8833c:	72a80000 	movk	w0, #0x4000, lsl #16
+   88340:	17ffff5a 	b	880a8 <PUT32>
+
+Disassembly of section .comment:
+
+0000000000000000 <.comment>:
+   0:	3a434347 	ccmn	w26, w3, #0x7, mi  // mi = first
+   4:	4e472820 	trn1	v0.8h, v1.8h, v7.8h
+   8:	6f542055 	umlal2	v21.4s, v2.8h, v4.h[1]
+   c:	68636c6f 	.inst	0x68636c6f ; undefined
+  10:	206e6961 	.inst	0x206e6961 ; undefined
+  14:	20726f66 	.inst	0x20726f66 ; undefined
+  18:	20656874 	.inst	0x20656874 ; undefined
+  1c:	72702d41 	.inst	0x72702d41 ; undefined
+  20:	6c69666f 	ldnp	d15, d25, [x19, #-368]
+  24:	72412065 	.inst	0x72412065 ; undefined
+  28:	74696863 	.inst	0x74696863 ; undefined
+  2c:	75746365 	.inst	0x75746365 ; undefined
+  30:	38206572 	.inst	0x38206572 ; undefined
+  34:	322d322e 	orr	w14, w17, #0xfff80000
+  38:	2e393130 	usubw	v16.8h, v9.8h, v25.8b
+  3c:	28203130 	stnp	w16, w12, [x9, #-256]
+  40:	2d6d7261 	ldp	s1, s28, [x19, #-152]
+  44:	2d6c6572 	ldp	s18, s25, [x11, #-160]
+  48:	38322e38 	.inst	0x38322e38 ; undefined
+  4c:	38202929 	.inst	0x38202929 ; undefined
+  50:	312e322e 	adds	w14, w17, #0xb8c
+  54:	31303220 	adds	w0, w17, #0xc0c
+  58:	30383038 	adr	x24, 7065d <_start-0xf9a3>
+  5c:	Address 0x000000000000005c is out of bounds.
+
