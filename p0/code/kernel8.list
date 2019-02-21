@@ -93,16 +93,16 @@ Disassembly of section .text:
 00000000000880d0 <notmain>:
    880d0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    880d4:	910003fd 	mov	x29, sp
-   880d8:	94000088 	bl	882f8 <init_timer>
+   880d8:	94000082 	bl	882e0 <init_timer>
    880dc:	52800140 	mov	w0, #0xa                   	// #10
    880e0:	94000032 	bl	881a8 <blink_led>
    880e4:	d503201f 	nop
    880e8:	94000008 	bl	88108 <led_on>
    880ec:	52a00200 	mov	w0, #0x100000              	// #1048576
-   880f0:	9400006e 	bl	882a8 <wait>
+   880f0:	9400006a 	bl	88298 <wait>
    880f4:	9400001b 	bl	88160 <led_off>
    880f8:	52a00200 	mov	w0, #0x100000              	// #1048576
-   880fc:	9400006b 	bl	882a8 <wait>
+   880fc:	94000067 	bl	88298 <wait>
    88100:	17fffffa 	b	880e8 <notmain+0x18>
    88104:	00000000 	.inst	0x00000000 ; undefined
 
@@ -180,12 +180,12 @@ Disassembly of section .text:
    88210:	97ffffa6 	bl	880a8 <PUT32>
    88214:	51000673 	sub	w19, w19, #0x1
    88218:	52990000 	mov	w0, #0xc800                	// #51200
-   8821c:	94000023 	bl	882a8 <wait>
+   8821c:	9400001f 	bl	88298 <wait>
    88220:	52a40001 	mov	w1, #0x20000000            	// #536870912
    88224:	2a1403e0 	mov	w0, w20
    88228:	97ffffa0 	bl	880a8 <PUT32>
    8822c:	52990000 	mov	w0, #0xc800                	// #51200
-   88230:	9400001e 	bl	882a8 <wait>
+   88230:	9400001a 	bl	88298 <wait>
    88234:	3100067f 	cmn	w19, #0x1
    88238:	54fffe81 	b.ne	88208 <blink_led+0x60>  // b.any
    8823c:	f94013f5 	ldr	x21, [sp, #32]
@@ -198,70 +198,64 @@ Disassembly of section .text:
 
 0000000000088258 <now_usec>:
    88258:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
-   8825c:	52800400 	mov	w0, #0x20                  	// #32
+   8825c:	52800380 	mov	w0, #0x1c                  	// #28
    88260:	72a80000 	movk	w0, #0x4000, lsl #16
    88264:	910003fd 	mov	x29, sp
    88268:	f9000bf3 	str	x19, [sp, #16]
    8826c:	97ffff91 	bl	880b0 <GET32>
    88270:	2a0003f3 	mov	w19, w0
-   88274:	52800380 	mov	w0, #0x1c                  	// #28
+   88274:	52800400 	mov	w0, #0x20                  	// #32
    88278:	72a80000 	movk	w0, #0x4000, lsl #16
    8827c:	97ffff8d 	bl	880b0 <GET32>
-   88280:	2a0003e0 	mov	w0, w0
-   88284:	8b138000 	add	x0, x0, x19, lsl #32
-   88288:	f9400bf3 	ldr	x19, [sp, #16]
-   8828c:	a8c27bfd 	ldp	x29, x30, [sp], #32
-   88290:	d65f03c0 	ret
-   88294:	d503201f 	nop
+   88280:	8b008260 	add	x0, x19, x0, lsl #32
+   88284:	f9400bf3 	ldr	x19, [sp, #16]
+   88288:	a8c27bfd 	ldp	x29, x30, [sp], #32
+   8828c:	d65f03c0 	ret
 
-0000000000088298 <usec_diff>:
-   88298:	eb01001f 	cmp	x0, x1
-   8829c:	da010000 	sbc	x0, x0, x1
-   882a0:	d65f03c0 	ret
-   882a4:	d503201f 	nop
+0000000000088290 <usec_diff>:
+   88290:	cb010000 	sub	x0, x0, x1
+   88294:	d65f03c0 	ret
 
-00000000000882a8 <wait>:
-   882a8:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
-   882ac:	910003fd 	mov	x29, sp
-   882b0:	a90153f3 	stp	x19, x20, [sp, #16]
-   882b4:	2a0003f4 	mov	w20, w0
+0000000000088298 <wait>:
+   88298:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+   8829c:	910003fd 	mov	x29, sp
+   882a0:	a90153f3 	stp	x19, x20, [sp, #16]
+   882a4:	2a0003f3 	mov	w19, w0
+   882a8:	97ffffec 	bl	88258 <now_usec>
+   882ac:	aa0003e1 	mov	x1, x0
+   882b0:	aa0003f4 	mov	x20, x0
+   882b4:	14000004 	b	882c4 <wait+0x2c>
    882b8:	97ffffe8 	bl	88258 <now_usec>
-   882bc:	aa0003f3 	mov	x19, x0
-   882c0:	97ffffe6 	bl	88258 <now_usec>
-   882c4:	d1000401 	sub	x1, x0, #0x1
-   882c8:	eb00027f 	cmp	x19, x0
-   882cc:	cb130021 	sub	x1, x1, x19
-   882d0:	cb130013 	sub	x19, x0, x19
-   882d4:	9a819261 	csel	x1, x19, x1, ls  // ls = plast
-   882d8:	aa0003f3 	mov	x19, x0
-   882dc:	cb010294 	sub	x20, x20, x1
-   882e0:	f100029f 	cmp	x20, #0x0
-   882e4:	54fffeec 	b.gt	882c0 <wait+0x18>
-   882e8:	a94153f3 	ldp	x19, x20, [sp, #16]
-   882ec:	a8c27bfd 	ldp	x29, x30, [sp], #32
-   882f0:	d65f03c0 	ret
-   882f4:	d503201f 	nop
+   882bc:	aa1403e1 	mov	x1, x20
+   882c0:	aa0003f4 	mov	x20, x0
+   882c4:	cb140021 	sub	x1, x1, x20
+   882c8:	8b130033 	add	x19, x1, x19
+   882cc:	f100027f 	cmp	x19, #0x0
+   882d0:	54ffff4c 	b.gt	882b8 <wait+0x20>
+   882d4:	a94153f3 	ldp	x19, x20, [sp, #16]
+   882d8:	a8c27bfd 	ldp	x29, x30, [sp], #32
+   882dc:	d65f03c0 	ret
 
-00000000000882f8 <init_timer>:
-   882f8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-   882fc:	52800001 	mov	w1, #0x0                   	// #0
-   88300:	52a80000 	mov	w0, #0x40000000            	// #1073741824
-   88304:	910003fd 	mov	x29, sp
-   88308:	97ffff68 	bl	880a8 <PUT32>
-   8830c:	52955561 	mov	w1, #0xaaab                	// #43691
-   88310:	52800100 	mov	w0, #0x8                   	// #8
-   88314:	72a0d541 	movk	w1, #0x6aa, lsl #16
-   88318:	72a80000 	movk	w0, #0x4000, lsl #16
-   8831c:	97ffff63 	bl	880a8 <PUT32>
-   88320:	52800380 	mov	w0, #0x1c                  	// #28
-   88324:	52800001 	mov	w1, #0x0                   	// #0
-   88328:	72a80000 	movk	w0, #0x4000, lsl #16
-   8832c:	97ffff5f 	bl	880a8 <PUT32>
-   88330:	a8c17bfd 	ldp	x29, x30, [sp], #16
-   88334:	52800400 	mov	w0, #0x20                  	// #32
-   88338:	52800001 	mov	w1, #0x0                   	// #0
-   8833c:	72a80000 	movk	w0, #0x4000, lsl #16
-   88340:	17ffff5a 	b	880a8 <PUT32>
+00000000000882e0 <init_timer>:
+   882e0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+   882e4:	52800001 	mov	w1, #0x0                   	// #0
+   882e8:	52a80000 	mov	w0, #0x40000000            	// #1073741824
+   882ec:	910003fd 	mov	x29, sp
+   882f0:	97ffff6e 	bl	880a8 <PUT32>
+   882f4:	52955561 	mov	w1, #0xaaab                	// #43691
+   882f8:	52800100 	mov	w0, #0x8                   	// #8
+   882fc:	72a0d541 	movk	w1, #0x6aa, lsl #16
+   88300:	72a80000 	movk	w0, #0x4000, lsl #16
+   88304:	97ffff69 	bl	880a8 <PUT32>
+   88308:	52800380 	mov	w0, #0x1c                  	// #28
+   8830c:	52800001 	mov	w1, #0x0                   	// #0
+   88310:	72a80000 	movk	w0, #0x4000, lsl #16
+   88314:	97ffff65 	bl	880a8 <PUT32>
+   88318:	a8c17bfd 	ldp	x29, x30, [sp], #16
+   8831c:	52800400 	mov	w0, #0x20                  	// #32
+   88320:	52800001 	mov	w1, #0x0                   	// #0
+   88324:	72a80000 	movk	w0, #0x4000, lsl #16
+   88328:	17ffff60 	b	880a8 <PUT32>
 
 Disassembly of section .comment:
 
