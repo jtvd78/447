@@ -36,9 +36,7 @@ notmain()
 
     uart_recv();
 
-	if (DEBUG_LOW >= DEBUG_LEVEL) { 
-		dont_call_directly(GETPC(),"Test DEBUG_LOW",0); 
-	}
+	uart_puts("Test DEBUG_LOW"); 
 
 	void * ptr = GETPC();
 	uart_put64x(sizeof(ptr)); uart_puts("\n");
@@ -77,9 +75,9 @@ notmain()
 		}
 		timeout = bring_timeoutq_current();
 	//	debug(DEBUG_LOW, "no event. about to wait for = ", (unsigned long)timeout);
-		if (DEBUG_LEVEL >= DEBUG_LOW) {
-			data.num = (unsigned long)get_time();	// since we're not using data anymore
-		}
+	//	if (DEBUG_LEVEL >= DEBUG_LOW) {
+	//		data.num = (unsigned long)get_time();	// since we're not using data anymore
+	//	}
 		wait(timeout);
 	//	debug(DEBUG_LOW, "done waiting = ", get_time() - (time_t)data.num);
     }

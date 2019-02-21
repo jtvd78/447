@@ -18,7 +18,7 @@ extern void	dont_call_directly( void *, char *, unsigned long);
 //#if (DEBUG_LEVEL == DEBUG_NONE)
 //#define debug(x,y,z);	
 //#else
-#define debug(x,y,z);	if (x >= DEBUG_LEVEL) { dont_call_directly(GETPC(),y,z); }
+//#define debug(x,y,z);	if (x >= DEBUG_LEVEL) { dont_call_directly(GETPC(),y,z); }
 //#endif
 extern void	log( char *);
 extern void	panic( int, char *);
