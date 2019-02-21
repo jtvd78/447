@@ -8,13 +8,9 @@
 #include "uart.h"
 #include "errno.h"
 
-
 #include "os.h"
 #include "callout.h"
 #include "events.h"
-
-
-
 
 void
 notmain()
@@ -40,7 +36,9 @@ notmain()
 
     uart_recv();
 
-	debug(DEBUG_LOW, "Test DEBUG_LOW", 0);
+	if (DEBUG_LOW >= DEBUG_LEVEL) { 
+		dont_call_directly(GETPC(),"Test DEBUG_LOW",0); 
+	}
 
 	void * ptr = GETPC();
 	uart_put64x(sizeof(ptr)); uart_puts("\n");
@@ -71,21 +69,19 @@ notmain()
     uart_puts("\n");
 
     // run the list
-//	extern pfv_t tq_gofunc();
     while (1) {
-//		debug(DEBUG_LOW, "top of loop eventpc = ", (unsigned long)tq_gofunc());
-		debug(DEBUG_LOW, "top of loop event", 0);
+	//	debug(DEBUG_LOW, "top of loop event", 0);
 		if (handle_timeoutq_event()) {
-			debug(DEBUG_LOW, "handled event.", 0);
+	//		debug(DEBUG_LOW, "handled event.", 0);
 			continue;
 		}
 		timeout = bring_timeoutq_current();
-		debug(DEBUG_LOW, "no event. about to wait for = ", (unsigned long)timeout);
+	//	debug(DEBUG_LOW, "no event. about to wait for = ", (unsigned long)timeout);
 		if (DEBUG_LEVEL >= DEBUG_LOW) {
 			data.num = (unsigned long)get_time();	// since we're not using data anymore
 		}
 		wait(timeout);
-		debug(DEBUG_LOW, "done waiting = ", get_time() - (time_t)data.num);
+	//	debug(DEBUG_LOW, "done waiting = ", get_time() - (time_t)data.num);
     }
 
 	return;
