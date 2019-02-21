@@ -10,14 +10,16 @@ enum debug_levels {
 // set this to the level you want to print out --
 // that level and higher will print to screen
 //
-#define DEBUG_LEVEL DEBUG_NONE
+#define DEBUG_LEVEL DEBUG_LOW
+
+extern void * GETPC ( void );
 
 extern void	dont_call_directly( void *, char *, unsigned long);
-#if (DEBUGLEVEL == DEBUG_NONE)
-#define debug(x,y,z);	
-#else
+//#if (DEBUG_LEVEL == DEBUG_NONE)
+//#define debug(x,y,z);	
+//#else
 #define debug(x,y,z);	if (x >= DEBUG_LEVEL) { dont_call_directly(GETPC(),y,z); }
-#endif
+//#endif
 extern void	log( char *);
 extern void	panic( int, char *);
 extern void init_errno( void );

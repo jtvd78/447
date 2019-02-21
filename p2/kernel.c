@@ -40,6 +40,8 @@ notmain()
 
     uart_recv();
 
+	debug(DEBUG_LOW, "Test DEBUG_LOW", 0);
+
 	void * ptr = GETPC();
 	uart_put64x(sizeof(ptr)); uart_puts("\n");
 	uart_put64x((unsigned long long)ptr); uart_puts("\n");
@@ -69,9 +71,10 @@ notmain()
     uart_puts("\n");
 
     // run the list
-	extern pfv_t tq_gofunc();
+//	extern pfv_t tq_gofunc();
     while (1) {
-		debug(DEBUG_LOW, "top of loop eventpc = ", (unsigned long)tq_gofunc());
+//		debug(DEBUG_LOW, "top of loop eventpc = ", (unsigned long)tq_gofunc());
+		debug(DEBUG_LOW, "top of loop event", 0);
 		if (handle_timeoutq_event()) {
 			debug(DEBUG_LOW, "handled event.", 0);
 			continue;
