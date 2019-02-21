@@ -56,23 +56,12 @@ init_timeoutq()
 int
 bring_timeoutq_current()
 {
-
-	debug(DEBUG_LOW, "Begin bring_timeoutq_current", 0);
-
 	struct event* first = (struct event*) LL_FIRST(timeoutq);
 	time_t now = get_time();
 	time_t diff = now - then_usec;
 
-	debug(DEBUG_LOW, "bring_timeoutq_current. Diff=", diff);
-
 	if (first != NULL) {
-
-		debug(DEBUG_LOW, "bring_timeoutq_current. Old Timeout=", first->timeout);
-
 		first->timeout -= diff;
-
-		debug(DEBUG_LOW, "bring_timeoutq_current. New Timeout=", first->timeout);
-
 	}
 
 	then_usec = now;
@@ -87,11 +76,6 @@ bring_timeoutq_current()
 void
 create_timeoutq_event(int timeout, int repeat, pfv_t function, namenum_t data)
 {
-	
-	debug(DEBUG_LOW, "Begin create_timeoutq_event", 0);
-
-	debug(DEBUG_LOW, "create_timeoutq_event. Event timeout=", timeout);
-	
 	struct event* first_free = (struct event*) LL_POP(freelist);
 	if (first_free == NULL) {
 		panic(ERRNO_NO_FREE_EVENT, "create_timeoutq_event");
@@ -101,20 +85,12 @@ create_timeoutq_event(int timeout, int repeat, pfv_t function, namenum_t data)
 	first_free->go = function;
 	first_free->data = data;	
 
+	struct event* tmp;
 	int added_event = 0;
 	int timeout_left = timeout;
-	struct event* tmp;
-
-	debug(DEBUG_LOW, "create_timeoutq_event event loop", 0);
-
-	int element_ctr = 0;
 
 	LL_EACH (timeoutq, tmp, struct event) {
 		timeout_left -= tmp->timeout;
-
-		debug(DEBUG_LOW, "create_timeoutq_event. element num=", element_ctr);
-		debug(DEBUG_LOW, "create_timeoutq_event. timeout_left=", timeout_left);
-		debug(DEBUG_LOW, "create_timeoutq_event. tmp->timeout=", tmp->timeout);
 
 		if(timeout_left < 0) {
 			// Insert new event before tmp
@@ -125,12 +101,8 @@ create_timeoutq_event(int timeout, int repeat, pfv_t function, namenum_t data)
 			break;
 		}
 
-		element_ctr++;
-
 		// Continue traversing list
 	}
-
-	debug(DEBUG_LOW, "create_timeoutq_event. Adding event to end. timeout=", timeout_left);
 
 	// If we haven't found a place for the event, append it to the end. 
 	if (!added_event) {
@@ -150,9 +122,6 @@ create_timeoutq_event(int timeout, int repeat, pfv_t function, namenum_t data)
 int
 handle_timeoutq_event( )
 {
-
-	debug(DEBUG_LOW, "Begin handle_timeoutq_event", 0);
-
 	struct event* first = (struct event*) LL_FIRST(timeoutq);
 
 	if (first == NULL) {
