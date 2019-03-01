@@ -11,7 +11,7 @@ void do_hex( namenum_t data )
 
 void do_blink( namenum_t data )
 {
-#if 1	// change this to 0 to try the more complex approach
+#if 0	// change this to 0 to try the more complex approach
 	blink_led_stall(data.num);
 #else
 	int i;

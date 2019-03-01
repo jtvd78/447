@@ -8,8 +8,6 @@
 
 #include "callout.h"
 
-
-
 #define MAX_EVENTS	256
 struct event queue[ MAX_EVENTS ];
 
@@ -47,7 +45,6 @@ init_timeoutq()
 
 	return;
 }
-
 
 //
 // account for however much time has elapsed since last update
@@ -132,10 +129,12 @@ handle_timeoutq_event( )
 
 	if (first->timeout < 2) {
 		first->go(first->data);
+
+		// The popped event is the same as 'first'
 		LL_POP(timeoutq);
 
+		LL_PUSH(freelist, first);
 		if (first->repeat_interval) {
-			LL_PUSH(freelist, first);
 			create_timeoutq_event(first->repeat_interval, first->repeat_interval, first->go, first->data);
 		}
 

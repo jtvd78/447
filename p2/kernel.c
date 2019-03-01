@@ -36,8 +36,6 @@ notmain()
 
     uart_recv();
 
-	uart_puts("Test DEBUG_LOW"); 
-
 	void * ptr = GETPC();
 	uart_put64x(sizeof(ptr)); uart_puts("\n");
 	uart_put64x((unsigned long long)ptr); uart_puts("\n");
@@ -68,18 +66,13 @@ notmain()
 
     // run the list
     while (1) {
-	//	debug(DEBUG_LOW, "top of loop event", 0);
+
 		if (handle_timeoutq_event()) {
-	//		debug(DEBUG_LOW, "handled event.", 0);
 			continue;
 		}
+
 		timeout = bring_timeoutq_current();
-	//	debug(DEBUG_LOW, "no event. about to wait for = ", (unsigned long)timeout);
-	//	if (DEBUG_LEVEL >= DEBUG_LOW) {
-	//		data.num = (unsigned long)get_time();	// since we're not using data anymore
-	//	}
 		wait(timeout);
-	//	debug(DEBUG_LOW, "done waiting = ", get_time() - (time_t)data.num);
     }
 
 	return;
