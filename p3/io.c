@@ -62,7 +62,8 @@ io_uart_send(unsigned int buf)
 int
 io_klog(char *buf, int siz)
 {
-	for (int i = 0; i < siz; i++) {
+	int i;
+	for (i = 0; i < siz; i++) {
 		uart_send(buf[i]);
 	}
 
