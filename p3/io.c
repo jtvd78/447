@@ -20,37 +20,53 @@ io_error(long arg)
 int
 io_read_led()
 {
-	// your code goes here
+	return 1;
 }
 
 int
 io_write_led(int buf)
 {
-	// your code goes here
+	if(buf) {
+		led_on();
+	} else {
+		led_off();
+	}
+
+	return 1;
 }
 
 int
 io_get_time(uint64_t *buf, int size)
 {
-	// your code goes here
+	if (size != 8) {
+		return 0;
+	}	
+	
+	*buf = get_time();
+	return 1;
 }
 
 int
 io_uart_recv()
 {
-	// your code goes here
+	return uart_recv();
 }
 
 int
 io_uart_send(unsigned int buf)
 {
-	// your code goes here
+	uart_send(buf);
+	return 1;
 }
 
 int
 io_klog(char *buf, int siz)
 {
-	// your code goes here
+	for (int i = 0; i < siz; i++) {
+		uart_send(buf[i]);
+	}
+
+	return 1;
 }
 
 
@@ -119,6 +135,3 @@ init_io(char *kver)
 		dp->init();
 	}
 }
-
-
-

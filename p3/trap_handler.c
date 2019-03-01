@@ -8,6 +8,7 @@
 #include "kversion.h"
 
 extern struct dev devtab[];
+extern char* kversion;
 
 int
 trap_handler(unsigned long r0, unsigned long r1, unsigned long r2)
@@ -37,7 +38,15 @@ trap_handler(unsigned long r0, unsigned long r1, unsigned long r2)
 	switch (r7) {
 		// for non-error conditions, return from within the switch() statement
 		case SYSCALL_KVERSION:
-			debug(DEBUG_LOW, "SYSCALL_WR_WORD dev  = ", r0);
+			debug(DEBUG_LOW, "SYSCALL_KVERSION", 0);
+
+			int i = 0;
+			char* buf = (char*) r0;
+			while(*(kversion + i)) {
+				*(buf + i) = *(kversion + i);
+				i++;
+			}
+			*(buf + i) = 0;
 
 			// your code goes here
 
@@ -45,14 +54,20 @@ trap_handler(unsigned long r0, unsigned long r1, unsigned long r2)
 		case SYSCALL_RD_WORD:
 			debug(DEBUG_LOW, "SYSCALL_RD_WORD dev = ", r0);
 
-			// your code goes here
+			struct dev* device = &devtab[r0];
+			if (device->devtype == DEV_WORD) {
+				return device->read();
+			}
 
 			break;
 		case SYSCALL_WR_WORD:
 			debug(DEBUG_LOW, "SYSCALL_WR_WORD dev  = ", r0);
 			debug(DEBUG_LOW, "SYSCALL_WR_WORD data = ", r1);
 
-			// your code goes here
+			struct dev* device = &devtab[r0];
+			if (device->devtype == DEV_WORD) {
+				return device->write(r1);
+			}
 
 			break;
 		case SYSCALL_RD_STREAM:
@@ -60,7 +75,10 @@ trap_handler(unsigned long r0, unsigned long r1, unsigned long r2)
 			debug(DEBUG_LOW, "SYSCALL_RD_STREAM buf = ", r1);
 			debug(DEBUG_LOW, "SYSCALL_RD_STREAM siz = ", r2);
 
-			// your code goes here
+			struct dev* device = &devtab[r0];
+			if (device->devtype == DEV_STREAM) {
+				return device->read(r1, r2);
+			}
 
 			break;
 		case SYSCALL_WR_STREAM:
@@ -68,7 +86,10 @@ trap_handler(unsigned long r0, unsigned long r1, unsigned long r2)
 			debug(DEBUG_LOW, "SYSCALL_WR_STREAM buf = ", r1);
 			debug(DEBUG_LOW, "SYSCALL_RD_STREAM siz = ", r2);
 
-			// your code goes here
+			struct dev* device = &devtab[r0];
+			if (device->devtype == DEV_STREAM) {
+				return device->write(r1, r2);
+			}
 
 			break;
 
