@@ -1,11 +1,6 @@
 
 #include "os.h"
-#include "led.h"
-#include "time.h"
-#include "uart.h"
-#include "log.h"
-#include "utils.h"
-#include "io.h"
+#include "dev.h"
 
 
 int
@@ -18,56 +13,33 @@ io_error(long arg)
 }
 
 int
-io_read_led()
-{
-	return 1;
-}
-
-int
 io_write_led(int buf)
 {
-	if(buf) {
-		led_on();
-	} else {
-		led_off();
-	}
-
-	return 1;
+	// your code goes here
 }
 
 int
 io_get_time(uint64_t *buf, int size)
 {
-	if (size != 8) {
-		return 0;
-	}	
-	
-	*buf = get_time();
-	return 1;
+	// your code goes here
 }
 
 int
 io_uart_recv()
 {
-	return uart_recv();
+	// your code goes here
 }
 
 int
 io_uart_send(unsigned int buf)
 {
-	uart_send(buf & 0xFF);
-	return 1;
+	// your code goes here
 }
 
 int
 io_klog(char *buf, int siz)
 {
-	int i;
-	for (i = 0; i < siz && buf[i] != 0; i++) {
-		uart_send(buf[i] & 0xFF);
-	}
-
-	return 1;
+	// your code goes here
 }
 
 
@@ -92,7 +64,7 @@ struct dev devtab[MAX_DEVICES+1] = {
 		"LED",
 		DEV_WORD,
 		init_led,
-		io_read_led,
+		io_error,
 		io_write_led,
 	},
 	{
@@ -136,3 +108,6 @@ init_io(char *kver)
 		dp->init();
 	}
 }
+
+
+

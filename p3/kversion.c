@@ -1,1 +1,1 @@
-char kversion[] = "Kernel version: [p3, Thu Feb 28 23:36:45 STD 2019]";
+char kversion[] = "Kernel version: [p3, Fri Mar 1 00:18:15 STD 2019]";
