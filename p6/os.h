@@ -132,7 +132,6 @@ struct io {
 
 extern struct io * get_io_entry(int type);
 extern void free_io_entry(struct io *iop);
-extern void do_dev_word(struct event *ep);
 extern void do_dev_cbuffer(struct event *ep);
 
 //
@@ -183,7 +182,6 @@ enum err_numbers {
 	ERRNO_INTERRUPT,
 	ERRNO_SYSCALL,
 	ERRNO_DEVHANDLER,
-	ERRNO_WAKE,
 	/* add new ones above this line */
 	ERRNO_MAX
 };

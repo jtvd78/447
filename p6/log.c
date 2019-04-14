@@ -10,7 +10,6 @@ char *errmsg[ERRNO_MAX+1] =
 	"Error: UNKNOWN INTERRUPT -",
 	"Error: UNSUPPORTED SYSTEM CALL -",
 	"Error: BAD CALL TO DEVHANDLER -",
-	"Error: Not in sleepq"
 
 	/* add new ones above this line */
 	"Error: ERRNO INPUT EXCEEDS MAXIMUM -",

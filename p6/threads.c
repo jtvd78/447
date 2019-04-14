@@ -5,7 +5,6 @@ extern	long stack_address_runningthread;
 extern	long start_address_runningthread;
 extern	long * tcb_address_runningthread;
 extern	long runningthreadid;
-extern int strcpyN(char *to, char *from, int bufsiz);
 
 #define NAMESIZE 16
 
@@ -66,6 +65,8 @@ dump_tcb(long threadid)
 	return;
 }
 
+extern int strcpyN(char *to, char *from, int bufsiz);
+
 void
 create_thread(char *name, void *text)
 {
@@ -104,67 +105,66 @@ create_thread(char *name, void *text)
 void
 scheduler(int new_state)
 {
-
-
-
-
-
+	struct tcb *out;
 	struct tcb *in;
-	struct tcb *out = active_thread;
-
-	switch(new_state) {
-		case THREAD_INIT: {
-
-			in = LL_POP(runq);
-			stack_address_runningthread = in->regs[REG_sp];
-			start_address_runningthread = in->regs[REG_pc] - 4;
-	
-		}
-		break;
-		case THREAD_RUN: {
-
-			if(LL_IS_EMPTY(runq)) {
-				in = active_thread;
-			} else {
-				in = LL_POP(runq);
-				LL_APPEND(runq, active_thread);
-			}
-
-		}
-		break;
-		case THREAD_SLEEP: {
-
-			LL_APPEND(sleepq, active_thread);
-
-			if(LL_IS_EMPTY(runq)) {
-				in = null_thread;
-			} else {
-				in = LL_POP(runq);
-			}
-			
-		}
-		break;
-		default:
-			panic(ERRNO_ASSERT, "Invalid scheduler parameter");
-			return;
+	if (new_state < 0 || new_state >= MAX_THREAD_STATES) {
+		log("ERROR: scheduler given invalid newstate:", new_state);
+		return;
 	}
-	active_thread = in;
-	tcb_address_runningthread = active_thread->regs;
-	runningthreadid = in ->threadid;
+	if (LL_IS_EMPTY(runq)) {
+		if (new_state == THREAD_RUN) return;
+	}
 
-// your code goes here
+	if (new_state != THREAD_INIT) {
+		if (DEBUG_MED >= DEBUG_LEVEL) dump_tcb(NUM_THREADS);
 
-	debug(DEBUG_HI, "scheduling out:",NOVAL);
-	debug(DEBUG_HI, out->name, out->threadid);
-	debug(DEBUG_HI, " stack =", out->regs[REG_sp]);
-	debug(DEBUG_HI, " start =", out->regs[REG_pc]-4);
-	debug(DEBUG_HI, " tcb   =", (long)out->regs);
-	debug(DEBUG_HI, " spsr  =", out->regs[REG_spsr]);
+		out = active_thread;
+		active_thread = (struct tcb *)NULL;
+		if (out == (struct tcb *)NULL) {
+			log("ERROR: no running thread in scheduler()", NOVAL);
+		} else {
+			debug(DEBUG_HI, "scheduler swapping out", runningthreadid);
 
-	// you will find this useful
+			debug(DEBUG_HI, "scheduling out:",NOVAL);
+			debug(DEBUG_HI, out->name, out->threadid);
+			debug(DEBUG_HI, " stack =", out->regs[REG_sp]);
+			debug(DEBUG_HI, " start =", out->regs[REG_pc]-4);
+			debug(DEBUG_HI, " tcb   =", (long)out->regs);
+			debug(DEBUG_HI, " spsr  =", out->regs[REG_spsr]);
+
+			// the displaced thread either goes back on runq or it gets put to sleep
+			if (out != null_thread && out->threadid > 0) {
+				LL_APPEND(((new_state == THREAD_RUN) ? runq : sleepq), out);
+			}
+		}
+	} else {
+		out = (struct tcb *)NULL;
+	}
+
+	if (LL_IS_EMPTY(runq)) {
+		in = null_thread;
+		if (in == (struct tcb *)NULL) {
+			in = &tcbs[0];
+			null_thread = in;
+		}
+	} else {
+		in = (struct tcb *)LL_POP(runq);
+		if (in == (struct tcb *)NULL) {
+			log("ERROR: failed to get thread from non-empty runq", NOVAL);
+			return;
+		}
+	}
+
+	debug(DEBUG_HI, "scheduler swapping in", in->threadid);
+
 	if (in->regs[REG_spsr] == 0 && out != (struct tcb *)NULL) {
 		in->regs[REG_spsr] = out->regs[REG_spsr] & 0xFFF;
 	}
+
+	tcb_address_runningthread = in->regs;
+	stack_address_runningthread = in->regs[REG_sp];
+	start_address_runningthread = in->regs[REG_pc]-4;
+	runningthreadid = in->threadid;
 
 	debug(DEBUG_HI, "scheduling in:",NOVAL);
 	debug(DEBUG_HI, in->name, in->threadid);
@@ -172,6 +172,10 @@ scheduler(int new_state)
 	debug(DEBUG_HI, " start =", in->regs[REG_pc]-4);
 	debug(DEBUG_HI, " tcb   =", (long)in->regs);
 	debug(DEBUG_HI, " spsr  =", in->regs[REG_spsr]);
+
+	active_thread = in;
+
+	if (DEBUG_MED >= DEBUG_LEVEL) dump_tcb(NUM_THREADS);
 
 	return;
 }
@@ -185,16 +189,14 @@ wake_thread(long threadid, long returnval)
 	}
 	struct tcb *tp = &tcbs[threadid];
 
-	if (LL_DETACH(sleepq, tp) == LL_NULL) {
-		panic(ERRNO_WAKE, "wake_thread: Thread not in sleepq");
+	// maybe do an explicit search to ensure it's on the queue?
+	if (LL_DETACH(sleepq, tp) == (llobject_t *)NULL) {
+		log("WARNING: wake_thread sleepq empty", threadid);
 	}
-
-	LL_APPEND(runq, tp);
 
 	tp->regs[REG_r0] = returnval;
 
-	// your code goes here ... get it off the sleepq, put it on the runq
-	// and set it up so that the user process receives the return val in r0
+	LL_PUSH(runq, tp);
 
 	return;
 }
@@ -217,7 +219,7 @@ init_threads()
 		strcpyN(tcbs[i].name, "[uninitialized]", NAMESIZE);
 		tcbs[i].name[NAMESIZE-1] = '\0';
 		tcbs[i].threadid = i;
-		tcbs[i].stack = 0x20000 + ((i+1) << 12);	// hack for now
+		tcbs[i].stack = 0x30000 + ((i+1) << 12);	// hack for now
 		for (j=0; j<17; j++) {
 			tcbs[i].regs[j] = 0;
 		}

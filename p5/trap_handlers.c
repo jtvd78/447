@@ -48,6 +48,22 @@ trap_handler(unsigned long r0, unsigned long r1, unsigned long r2)
 			debug(DEBUG_HI, "SYSCALL_RD_WORD dev =", r0);
 			if (r0 < MAX_DEVICES) {
 
+				if (devtab[r0].rcheck()) {
+					return devtab[r0].read();
+				}
+
+				struct io* iop = get_io_entry(DEV_WORD);
+				iop->device = r0;
+				iop->rw = IO_READ;
+				iop->threadid = runningthreadid;
+
+				namenum_t data;
+				data.ptr = iop;
+
+				create_timeoutq_event(5000, 5000, 10, do_dev_word, data);
+				scheduler(THREAD_SLEEP);
+				return 0;
+
 				// your code goes here
 
 			}
@@ -59,6 +75,20 @@ trap_handler(unsigned long r0, unsigned long r1, unsigned long r2)
 				if (devtab[r0].wcheck()) {
 					return devtab[r0].write(r1);
 				}
+
+				struct io* iop = get_io_entry(DEV_WORD);
+				iop->device = r0;
+				iop->rw = IO_WRITE;
+				iop->threadid = runningthreadid;
+				iop->data.num = r1;
+
+				namenum_t data;
+				data.ptr = iop;
+
+				create_timeoutq_event(5000, 5000, 10, do_dev_word, data);
+				scheduler(THREAD_SLEEP);
+				return 0;
+
 				
 				// your code goes here
 
