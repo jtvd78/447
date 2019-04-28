@@ -10,22 +10,21 @@ _start:
 	// FIQ can simply be written here, since this is the end of the table:
     b hang		// FIQ INTERRUPT         runs in FIQ mode
 
-.equ    FIQSTACK3 , 0x2f000
-.equ    IRQSTACK3 , 0x2e000
-.equ    SVCSTACK3 , 0x2d000
-.equ    KSTACK3   , 0x2c000
-.equ    FIQSTACK2 , 0x2b000
-.equ    IRQSTACK2 , 0x2a000
-.equ    SVCSTACK2 , 0x29000
-.equ    KSTACK2   , 0x28000
-.equ    FIQSTACK1 , 0x27000
+.equ    IRQSTACK3 , 0x2c000
+.equ    SVCSTACK3 , 0x2b000
+.equ    KSTACK3   , 0x2a000
+
+.equ    IRQSTACK2 , 0x29000
+.equ    SVCSTACK2 , 0x28000
+.equ    KSTACK2   , 0x27000
+
 .equ    IRQSTACK1 , 0x26000
 .equ    SVCSTACK1 , 0x25000
 .equ    KSTACK1   , 0x24000
-.equ    FIQSTACK0 , 0x23000
-.equ    IRQSTACK0 , 0x22000
-.equ    SVCSTACK0 , 0x21000
-.equ    KSTACK0   , 0x20000
+
+.equ    IRQSTACK0 , 0x23000
+.equ    SVCSTACK0 , 0x22000
+.equ    KSTACK0   , 0x21000
 
 .equ	USR_mode,	0x10
 .equ	FIQ_mode,	0x11
@@ -43,21 +42,21 @@ res_handler:
     and r0, r0, #0xFFFFDFFF   @ turn on vector table at 0x0000000 (bit 12)
     mcr p15, 0, r0, c1, c0, 0 @ Write System Control Register
 
-	// divide up by core, and set up each stack separately
+	// check core ID
 	mrc     p15, 0, r0, c0, c0, 5
 	ubfx    r0, r0, #0, #2
-	cmp     r0, #0					@ is it core 0?
+	cmp     r0, #0					// is it core 0?
 	beq     core0
-	cmp     r0, #1					@ is it core 1?
-	beq     core1
-	cmp     r0, #2					@ is it core 2?
-	beq     core2
-	cmp     r0, #3					@ is it core 3?
-	beq     core3
 
-	@ CPU ID is not 0..3 - wth?
-	b hang
+	// it is not core0, so do things that are appropriate for SVC level as opposed to HYP
+	// like set up separate stacks for each core, etc.
 
+	b		hang
+
+
+.globl hang
+hang:	wfi
+		b hang
 
 core0:
 	// Initialize SPSR in all modes.
@@ -77,10 +76,10 @@ core0:
 	// set up stacks (only need IRQ SVC and K at this point, but what the heck)
 	cps		#IRQ_mode
 	mov		sp, # IRQSTACK0
-	cps		#FIQ_mode
-	mov		sp, # FIQSTACK0
+
 	cps		#SVC_mode
 	mov		sp, # SVCSTACK0
+
 	cps		#SYS_mode
 	mov		sp, # KSTACK0
 	bl		init_kernel
@@ -94,120 +93,6 @@ core0:
 	ldr		r0, start_address_runningthread
 	mov	pc, r0
 	b hang
-
-core1:
-	// Initialize SPSR in all modes.
-	MOV    R0, #0
-	MSR    SPSR, R0
-	MSR    SPSR_svc, R0
-	MSR    SPSR_und, R0
-	MSR    SPSR_hyp, R0
-	MSR    SPSR_abt, R0
-	MSR    SPSR_irq, R0
-	MSR    SPSR_fiq, R0
-
-	// Initialize ELR_hyp (necessary?)
-	MOV		R0, #0
-	MSR		ELR_hyp, R0
-
-	// set up stacks (only need IRQ SVC and K at this point, but what the heck)
-	cps		#IRQ_mode
-	mov		sp, # IRQSTACK1
-	cps		#FIQ_mode
-	mov		sp, # FIQSTACK1
-	cps		#SVC_mode
-	mov		sp, # SVCSTACK1
-	cps		#SYS_mode
-	mov		sp, # KSTACK1
-	bl		init_kernel
-
-	// start the timer-interrupt going
-	bl		set_timer	// must be BEFORE going to user mode
-
-	// set up user stack and jump to shell
-	cps		#USR_mode
-	ldr		sp, stack_address_runningthread
-	ldr		r0, start_address_runningthread
-	mov	pc, r0
-	b hang
-
-core2:
-	// Initialize SPSR in all modes.
-	MOV    R0, #0
-	MSR    SPSR, R0
-	MSR    SPSR_svc, R0
-	MSR    SPSR_und, R0
-	MSR    SPSR_hyp, R0
-	MSR    SPSR_abt, R0
-	MSR    SPSR_irq, R0
-	MSR    SPSR_fiq, R0
-
-	// Initialize ELR_hyp (necessary?)
-	MOV		R0, #0
-	MSR		ELR_hyp, R0
-
-	// set up stacks (only need IRQ SVC and K at this point, but what the heck)
-	cps		#IRQ_mode
-	mov		sp, # IRQSTACK2
-	cps		#FIQ_mode
-	mov		sp, # FIQSTACK2
-	cps		#SVC_mode
-	mov		sp, # SVCSTACK2
-	cps		#SYS_mode
-	mov		sp, # KSTACK2
-	bl		init_kernel
-
-	// start the timer-interrupt going
-	bl		set_timer	// must be BEFORE going to user mode
-
-	// set up user stack and jump to shell
-	cps		#USR_mode
-	ldr		sp, stack_address_runningthread
-	ldr		r0, start_address_runningthread
-	mov	pc, r0
-	b hang
-
-core3:
-	// Initialize SPSR in all modes.
-	MOV    R0, #0
-	MSR    SPSR, R0
-	MSR    SPSR_svc, R0
-	MSR    SPSR_und, R0
-	MSR    SPSR_hyp, R0
-	MSR    SPSR_abt, R0
-	MSR    SPSR_irq, R0
-	MSR    SPSR_fiq, R0
-
-	// Initialize ELR_hyp (necessary?)
-	MOV		R0, #0
-	MSR		ELR_hyp, R0
-
-	// set up stacks (only need IRQ SVC and K at this point, but what the heck)
-	cps		#IRQ_mode
-	mov		sp, # IRQSTACK3
-	cps		#FIQ_mode
-	mov		sp, # FIQSTACK3
-	cps		#SVC_mode
-	mov		sp, # SVCSTACK3
-	cps		#SYS_mode
-	mov		sp, # KSTACK3
-	bl		init_kernel
-
-	// start the timer-interrupt going
-	bl		set_timer	// must be BEFORE going to user mode
-
-	// set up user stack and jump to shell
-	cps		#USR_mode
-	ldr		sp, stack_address_runningthread
-	ldr		r0, start_address_runningthread
-	mov	pc, r0
-	b hang
-
-
-
-.globl hang
-hang: 	wfi
-		b hang
 
 
 .globl runningthreadid
@@ -278,9 +163,6 @@ svc_handler:
 	mov		sp, #SVCSTACK0
     bl  trap_handler
 
-	// only because we know trap handler won't task switch
-	str	r0, save_r0_svc
-
     ldr     sp, tcb_address_runningthread            @ load the now-destroyed r13 w TCB pointer
     ldr r0,[sp,#64]     @ pop saved CPSR
     msr SPSR_cxsf, r0       @ move it into place
@@ -290,6 +172,5 @@ svc_handler:
     @ Restore saved values.  The ^ means to restore the userspace registers
     ldmia   sp, {r0-lr}^
 //	movs    pc, lr
-	ldr	r0, save_r0_svc
 	subs	pc, lr, #4					@ return from exception
 
